@@ -40,7 +40,7 @@ export default function RegisterForm() {
     mutate(values, { onSuccess: () => router.push("/login") });
 
   return (
-    <div className="w-full max-w-132 rounded-2xl border border-white/10 bg-linear-to-b from-black via-black to-[#12041f] p-6">
+    <div className="w-full max-w-132 rounded-2xl border border-white/10 bg-black/60 p-6">
       <div className="flex items-center justify-center gap-2">
         <Image
           src="/icons/logo-sociality.svg"
@@ -65,7 +65,7 @@ export default function RegisterForm() {
             name="email"
             render={({ field }) => (
               <FormItem className="space-y-2">
-                <FormLabel className={labelClass}>Name</FormLabel>
+                <FormLabel className={labelClass}>Email</FormLabel>
                 <FormControl>
                   <Input
                     type="email"

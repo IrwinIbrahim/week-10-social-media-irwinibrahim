@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/api";
 import type { RegisterValues } from "./schema";
 
-// ⚠️ Sesuaikan path & body dengan Swagger bila berbeda
+// ⚠️ Penyesuaian path & body dengan Swagger bila berbeda
 export function useRegister() {
   return useMutation({
     mutationFn: ({ email, username, phone, password }: RegisterValues) =>

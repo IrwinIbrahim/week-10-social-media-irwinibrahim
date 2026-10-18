@@ -22,4 +22,10 @@ export const registerSchema = z
     message: "Passwords do not match",
   });
 
+export const loginSchema = z.object({
+  email: z.string().min(1, "Email is required").email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
 export type RegisterValues = z.infer<typeof registerSchema>;
+export type LoginValues = z.infer<typeof loginSchema>;
