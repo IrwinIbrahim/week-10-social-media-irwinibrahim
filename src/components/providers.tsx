@@ -5,6 +5,7 @@ import { Provider as ReduxProvider, useDispatch } from "react-redux";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { store } from "@/store";
 import { setToken } from "@/store/auth-slice";
+import Toaster from "@/components/toaster";
 
 const TOKEN_KEY = "sociality_token";
 
@@ -34,6 +35,7 @@ export default function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <AuthHydrator />
         {children}
+        <Toaster />
       </QueryClientProvider>
     </ReduxProvider>
   );

@@ -1,5 +1,5 @@
 import { apiFetch } from "@/lib/api";
-import type { FeedPage, Post, User } from "@/types/post";
+import type { FeedPage, Post, Profile, User } from "@/types/post";
 
 type Raw = Record<string, unknown>;
 
@@ -39,21 +39,41 @@ export function normalizePost(raw: unknown): Post {
   };
 }
 
-const PAGE_SIZE = 10;
+export function normalizeProfile(raw: unknown): Profile {
+  const r = asRaw(raw);
+  const p = asRaw(r.profile ?? r.user ?? r);
+  const s = asRaw(r.stats ?? p.stats ?? r.counts ?? p.counts ?? r);
 
-// ⚠️ Penyesuaian path dengan Swagger bila berbeda
-export async function fetchMe(token: string): Promise<User> {
-  const res = await apiFetch<unknown>("/api/me", { token });
-  const root = asRaw(res);
-  return normalizeUser(root.data ?? root);
+  return {
+    ...normalizeUser(p),
+    bio: str(p.bio) ?? str(p.about) ?? str(p.description) ?? "",
+    stats: {
+      posts: num(s.postCount ?? s.postsCount ?? s.posts ?? s.post),
+      followers: num(s.followersCount ?? s.followerCount ?? s.followers),
+      following: num(s.followingCount ?? s.following),
+      likes: num(s.likesCount ?? s.likeCount ?? s.totalLikes ?? s.likes),
+    },
+  };
 }
 
-export async function fetchFeed(
+const PAGE_SIZE = 10;
+
+// GET /api/me (sesuai Swagger)
+export async function fetchMe(token: string): Promise<Profile> {
+  const res = await apiFetch<unknown>("/api/me", { token });
+  const root = asRaw(res);
+  return normalizeProfile(root.data ?? root);
+}
+
+// Dipakai feed, gallery, dan saved
+export async function fetchPostPage(
   token: string,
+  path: string,
   page: number,
 ): Promise<FeedPage> {
+  const sep = path.includes("?") ? "&" : "?";
   const res = await apiFetch<unknown>(
-    `/api/feed?page=${page}&limit=${PAGE_SIZE}`,
+    `${path}${sep}page=${page}&limit=${PAGE_SIZE}`,
     { token },
   );
 
@@ -68,6 +88,9 @@ export async function fetchFeed(
 
   return { items, page, hasNext };
 }
+
+export const fetchFeed = (token: string, page: number) =>
+  fetchPostPage(token, "/api/feed", page);
 
 export function togglePostAction(
   token: string,

@@ -23,3 +23,13 @@ export interface FeedPage {
   page: number;
   hasNext: boolean;
 }
+
+export interface Profile extends User {
+  bio: string;
+  stats: {
+    posts: number;
+    followers: number;
+    following: number;
+    likes: number;
+  };
+}
