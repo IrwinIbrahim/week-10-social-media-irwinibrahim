@@ -37,7 +37,7 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-black text-white">
       <AppHeader user={profile} mobileTitle={profile?.name} />
 
-      <main className="mx-auto w-full max-w-203 px-4 pb-32 pt-4 md:px-0 md:pt-8">
+      <main className="mx-auto w-full max-w-140 px-4 pb-32 pt-4 md:px-0 md:pt-8">
         {me.isError && (
           <p role="alert" className="mb-4 text-sm text-red-500">
             {me.error instanceof Error

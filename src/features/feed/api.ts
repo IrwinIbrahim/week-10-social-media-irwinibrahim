@@ -46,6 +46,8 @@ export function normalizeProfile(raw: unknown): Profile {
 
   return {
     ...normalizeUser(p),
+    email: str(p.email) ?? "",
+    phone: str(p.phone) ?? "",
     bio: str(p.bio) ?? str(p.about) ?? str(p.description) ?? "",
     stats: {
       posts: num(s.postCount ?? s.postsCount ?? s.posts ?? s.post),
@@ -65,7 +67,7 @@ export async function fetchMe(token: string): Promise<Profile> {
   return normalizeProfile(root.data ?? root);
 }
 
-// Dipakai feed, gallery, dan saved
+// Untuk feed, gallery, dan saved
 export async function fetchPostPage(
   token: string,
   path: string,

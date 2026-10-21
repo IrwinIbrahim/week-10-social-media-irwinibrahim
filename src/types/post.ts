@@ -25,6 +25,8 @@ export interface FeedPage {
 }
 
 export interface Profile extends User {
+  email: string;
+  phone: string;
   bio: string;
   stats: {
     posts: number;
