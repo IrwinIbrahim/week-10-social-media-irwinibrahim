@@ -28,6 +28,7 @@ export interface Profile extends User {
   email: string;
   phone: string;
   bio: string;
+  isFollowedByMe?: boolean;
   stats: {
     posts: number;
     followers: number;
