@@ -5,18 +5,28 @@ import { useState } from "react";
 import { Heart } from "lucide-react";
 import Icon from "@/components/icon";
 import Avatar from "@/components/avatar";
+import CommentsModal from "@/features/comments/comments-modal";
 import { timeAgo } from "@/lib/time";
 import { cn } from "@/lib/utils";
-import type { Post } from "@/types/post";
+import type { Post, User } from "@/types/post";
 
 interface PostCardProps {
   post: Post;
+  token: string | null;
+  me?: User;
   onLike: (post: Post) => void;
   onSave: (post: Post) => void;
 }
 
-export default function PostCard({ post, onLike, onSave }: PostCardProps) {
+export default function PostCard({
+  post,
+  token,
+  me,
+  onLike,
+  onSave,
+}: PostCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
   const isLong = post.caption.length > 90 || post.caption.includes("\n");
 
   return (
@@ -62,6 +72,7 @@ export default function PostCard({ post, onLike, onSave }: PostCardProps) {
 
           <button
             type="button"
+            onClick={() => setCommentsOpen(true)}
             aria-label="Comments"
             className="flex items-center gap-1.5 text-sm font-semibold"
           >
@@ -114,6 +125,17 @@ export default function PostCard({ post, onLike, onSave }: PostCardProps) {
           </button>
         )}
       </div>
+
+      {commentsOpen && (
+        <CommentsModal
+          post={post}
+          token={token}
+          me={me}
+          onClose={() => setCommentsOpen(false)}
+          onLike={onLike}
+          onSave={onSave}
+        />
+      )}
     </article>
   );
 }

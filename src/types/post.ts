@@ -36,3 +36,16 @@ export interface Profile extends User {
     likes: number;
   };
 }
+
+export interface Comment {
+  id: string;
+  text: string;
+  createdAt: string;
+  author: User;
+}
+
+export interface CommentsPage {
+  items: Comment[];
+  page: number;
+  hasNext: boolean;
+}

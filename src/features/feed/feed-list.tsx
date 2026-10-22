@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import PostCard from "./post-card";
-import { useFeed, useToggleLike, useToggleSave } from "./hooks";
+import { useFeed, useMe, useToggleLike, useToggleSave } from "./hooks";
 
 function PostSkeleton() {
   return (
@@ -24,6 +24,7 @@ export default function FeedList({ token }: { token: string | null }) {
   const feed = useFeed(token);
   const like = useToggleLike(token);
   const save = useToggleSave(token);
+  const me = useMe(token);
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = feed;
@@ -88,6 +89,8 @@ export default function FeedList({ token }: { token: string | null }) {
         <PostCard
           key={post.id}
           post={post}
+          token={token}
+          me={me.data}
           onLike={(p) => like.mutate({ id: p.id, enable: !p.likedByMe })}
           onSave={(p) => save.mutate({ id: p.id, enable: !p.savedByMe })}
         />

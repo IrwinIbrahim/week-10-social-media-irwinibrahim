@@ -31,7 +31,7 @@ export function useFeed(token: string | null) {
   });
 }
 
-function patchPost(qc: QueryClient, id: string, fn: (p: Post) => Post) {
+export function patchPost(qc: QueryClient, id: string, fn: (p: Post) => Post) {
   qc.setQueriesData<FeedData>({ queryKey: feedKey }, (old) =>
     old
       ? {
