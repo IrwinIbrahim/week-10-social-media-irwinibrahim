@@ -20,6 +20,8 @@ export function normalizeUser(raw: unknown): User {
     name: str(r.name) ?? str(r.username) ?? "User",
     username: str(r.username) ?? str(r.name) ?? "user",
     avatarUrl: str(r.avatarUrl) ?? str(r.avatar) ?? str(r.profilePicture),
+    isFollowedByMe:
+      typeof r.isFollowedByMe === "boolean" ? r.isFollowedByMe : undefined,
   };
 }
 
@@ -104,4 +106,28 @@ export function togglePostAction(
     method: enable ? "POST" : "DELETE",
     token,
   });
+}
+
+// Semua id post yang saya simpan (GET /api/me/saved, semua halaman)
+export async function fetchSavedIds(token: string): Promise<string[]> {
+  const ids: string[] = [];
+
+  for (let page = 1; page <= 20; page++) {
+    const res = await fetchPostPage(token, "/api/me/saved", page);
+    ids.push(...res.items.map((p) => p.id));
+    if (!res.hasNext) break;
+  }
+
+  return ids;
+}
+
+// GET /api/posts/{id}
+export async function fetchPost(
+  token: string | null,
+  id: string,
+): Promise<Post> {
+  const res = await apiFetch<unknown>(`/api/posts/${id}`, { token });
+  const root = asRaw(res);
+  const data = asRaw(root.data ?? root);
+  return normalizePost(data.post ?? data);
 }

@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import PostCard from "./post-card";
-import { useFeed, useMe, useToggleLike, useToggleSave } from "./hooks";
+import {
+  useFeed,
+  useMe,
+  useSavedIds,
+  useToggleLike,
+  useToggleSave,
+} from "./hooks";
 
 function PostSkeleton() {
   return (
@@ -22,9 +28,15 @@ function PostSkeleton() {
 
 export default function FeedList({ token }: { token: string | null }) {
   const feed = useFeed(token);
+  const me = useMe(token);
+  const savedIds = useSavedIds(token);
   const like = useToggleLike(token);
   const save = useToggleSave(token);
-  const me = useMe(token);
+
+  const savedSet = useMemo(
+    () => (savedIds.data ? new Set(savedIds.data) : null),
+    [savedIds.data],
+  );
 
   const sentinelRef = useRef<HTMLDivElement>(null);
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = feed;
@@ -85,16 +97,23 @@ export default function FeedList({ token }: { token: string | null }) {
 
   return (
     <>
-      {posts.map((post) => (
-        <PostCard
-          key={post.id}
-          post={post}
-          token={token}
-          me={me.data}
-          onLike={(p) => like.mutate({ id: p.id, enable: !p.likedByMe })}
-          onSave={(p) => save.mutate({ id: p.id, enable: !p.savedByMe })}
-        />
-      ))}
+      {posts.map((post) => {
+        // Feed tidak memuat savedByMe, jadi diisi dari daftar /api/me/saved
+        const view = savedSet
+          ? { ...post, savedByMe: savedSet.has(post.id) }
+          : post;
+
+        return (
+          <PostCard
+            key={post.id}
+            post={view}
+            token={token}
+            me={me.data}
+            onLike={(p) => like.mutate({ id: p.id, enable: !p.likedByMe })}
+            onSave={(p) => save.mutate({ id: p.id, enable: !p.savedByMe })}
+          />
+        );
+      })}
 
       <div
         ref={sentinelRef}

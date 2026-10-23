@@ -3,6 +3,7 @@ export interface User {
   name: string;
   username: string;
   avatarUrl?: string;
+  isFollowedByMe?: boolean;
 }
 
 export interface Post {
@@ -46,6 +47,12 @@ export interface Comment {
 
 export interface CommentsPage {
   items: Comment[];
+  page: number;
+  hasNext: boolean;
+}
+
+export interface UsersPage {
+  items: User[];
   page: number;
   hasNext: boolean;
 }

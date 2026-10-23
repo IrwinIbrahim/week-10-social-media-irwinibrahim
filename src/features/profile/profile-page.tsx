@@ -11,8 +11,13 @@ import { useMe } from "@/features/feed/hooks";
 import { cn } from "@/lib/utils";
 import PostGrid from "./post-grid";
 import type { ProfileTab } from "./hooks";
+import { useDispatch } from "react-redux";
+import ProfileStats from "@/components/profile-stats";
+import { showToast } from "@/store/toast-slice";
 
 export default function ProfilePage() {
+  const dispatch = useDispatch();
+
   const { token, ready } = useAuthGuard();
   const me = useMe(token);
   const [tab, setTab] = useState<ProfileTab>("gallery");
@@ -23,10 +28,29 @@ export default function ProfilePage() {
 
   const stats = [
     { label: "Post", value: profile?.stats.posts ?? 0 },
-    { label: "Followers", value: profile?.stats.followers ?? 0 },
-    { label: "Following", value: profile?.stats.following ?? 0 },
+    {
+      label: "Followers",
+      value: profile?.stats.followers ?? 0,
+      href: "/profile/followers",
+    },
+    {
+      label: "Following",
+      value: profile?.stats.following ?? 0,
+      href: "/profile/following",
+    },
     { label: "Likes", value: profile?.stats.likes ?? 0 },
   ];
+
+  const onShare = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/users/${encodeURIComponent(profile?.username ?? "")}`,
+      );
+      dispatch(showToast("Link Copied"));
+    } catch {
+      dispatch(showToast("Failed to copy link"));
+    }
+  };
 
   const tabs: { key: ProfileTab; label: string; icon: string }[] = [
     { key: "gallery", label: "Gallery", icon: "logo-gallery" },
@@ -73,6 +97,7 @@ export default function ProfilePage() {
             </Link>
             <button
               type="button"
+              onClick={onShare}
               aria-label="Share profile"
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#252B37] hover:bg-white/5"
             >
@@ -89,20 +114,7 @@ export default function ProfilePage() {
         )}
 
         {/* Stats */}
-        <div className="mt-5 grid grid-cols-4">
-          {stats.map((s, i) => (
-            <div
-              key={s.label}
-              className={cn(
-                "flex flex-col items-center gap-1 py-1",
-                i > 0 && "border-l border-[#181D27]",
-              )}
-            >
-              <span className="text-xl font-bold">{s.value}</span>
-              <span className="text-sm text-neutral-400">{s.label}</span>
-            </div>
-          ))}
-        </div>
+        <ProfileStats stats={stats} />
 
         {/* Tabs */}
         <div className="mt-6 grid grid-cols-2 border-b border-[#181D27]">

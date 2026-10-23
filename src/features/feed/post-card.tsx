@@ -2,10 +2,12 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Heart } from "lucide-react";
 import Icon from "@/components/icon";
 import Avatar from "@/components/avatar";
 import CommentsModal from "@/features/comments/comments-modal";
+import ShareModal from "@/features/share/share-modal";
 import { timeAgo } from "@/lib/time";
 import { cn } from "@/lib/utils";
 import type { Post, User } from "@/types/post";
@@ -18,29 +20,25 @@ interface PostCardProps {
   onSave: (post: Post) => void;
 }
 
-export default function PostCard({
-  post,
-  token,
-  me,
-  onLike,
-  onSave,
-}: PostCardProps) {
+export default function PostCard({ post, token, me, onLike, onSave }: PostCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
   const isLong = post.caption.length > 90 || post.caption.includes("\n");
 
   return (
     <article className="border-b border-[#181D27] py-4">
       {/* Author */}
-      <div className="flex items-center gap-3">
+      <Link
+        href={`/users/${encodeURIComponent(post.author.username)}`}
+        className="flex w-fit items-center gap-3 hover:opacity-90"
+      >
         <Avatar src={post.author.avatarUrl} name={post.author.name} size={44} />
         <div>
-          <p className="text-sm font-semibold md:text-base">
-            {post.author.username}
-          </p>
+          <p className="text-sm font-semibold md:text-base">{post.author.name}</p>
           <p className="text-xs text-neutral-400">{timeAgo(post.createdAt)}</p>
         </div>
-      </div>
+      </Link>
 
       {/* Image */}
       {post.imageUrl && (
@@ -82,6 +80,7 @@ export default function PostCard({
 
           <button
             type="button"
+            onClick={() => setShareOpen(true)}
             aria-label="Share"
             className="flex items-center gap-1.5 text-sm font-semibold"
           >
@@ -110,7 +109,7 @@ export default function PostCard({
         <p
           className={cn(
             "mt-1 whitespace-pre-line text-sm leading-6",
-            !expanded && "line-clamp-2",
+            !expanded && "line-clamp-2"
           )}
         >
           {post.caption}
@@ -135,6 +134,10 @@ export default function PostCard({
           onLike={onLike}
           onSave={onSave}
         />
+      )}
+
+      {shareOpen && (
+        <ShareModal post={post} token={token} onClose={() => setShareOpen(false)} />
       )}
     </article>
   );

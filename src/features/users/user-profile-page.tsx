@@ -13,6 +13,7 @@ import { useMe } from "@/features/feed/hooks";
 import { showToast } from "@/store/toast-slice";
 import { cn } from "@/lib/utils";
 import { useToggleFollow, useUser, useUserPosts, type UserTab } from "./hooks";
+import ProfileStats from "@/components/profile-stats";
 
 export default function UserProfilePage({ username }: { username: string }) {
   const router = useRouter();
@@ -46,10 +47,19 @@ export default function UserProfilePage({ username }: { username: string }) {
     }
   };
 
+  const base = `/users/${encodeURIComponent(username)}`;
   const stats = [
     { label: "Post", value: profile?.stats.posts ?? 0 },
-    { label: "Followers", value: profile?.stats.followers ?? 0 },
-    { label: "Following", value: profile?.stats.following ?? 0 },
+    {
+      label: "Followers",
+      value: profile?.stats.followers ?? 0,
+      href: `${base}/followers`,
+    },
+    {
+      label: "Following",
+      value: profile?.stats.following ?? 0,
+      href: `${base}/following`,
+    },
     { label: "Likes", value: profile?.stats.likes ?? 0 },
   ];
 
@@ -131,20 +141,7 @@ export default function UserProfilePage({ username }: { username: string }) {
             )}
 
             {/* Stats */}
-            <div className="mt-5 grid grid-cols-4">
-              {stats.map((s, i) => (
-                <div
-                  key={s.label}
-                  className={cn(
-                    "flex flex-col items-center gap-1 py-1",
-                    i > 0 && "border-l border-[#181D27]",
-                  )}
-                >
-                  <span className="text-xl font-bold">{s.value}</span>
-                  <span className="text-sm text-neutral-400">{s.label}</span>
-                </div>
-              ))}
-            </div>
+            <ProfileStats stats={stats} />
 
             {/* Tabs */}
             <div className="mt-6 grid grid-cols-2 border-b border-[#181D27]">

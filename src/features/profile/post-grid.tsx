@@ -1,21 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
+import { useDispatch } from "react-redux";
+import { Trash2, X } from "lucide-react";
+import PostGridView, {
+  GridSkeleton,
+  TileButton,
+} from "@/components/post-grid-view";
+import { useToggleSave } from "@/features/feed/hooks";
+import { useDeletePost } from "@/features/posts/use-delete-post";
+import { showToast } from "@/store/toast-slice";
 import { useProfilePosts, type ProfileTab } from "./hooks";
-
-function GridSkeleton() {
-  return (
-    <div className="grid grid-cols-3 gap-1">
-      {Array.from({ length: 9 }).map((_, i) => (
-        <div
-          key={i}
-          className="aspect-square animate-pulse rounded-md bg-[#0A0D12]"
-        />
-      ))}
-    </div>
-  );
-}
 
 export default function PostGrid({
   token,
@@ -26,84 +20,46 @@ export default function PostGrid({
   tab: ProfileTab;
   username?: string;
 }) {
+  const dispatch = useDispatch();
   const query = useProfilePosts(token, tab, username);
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
+  const del = useDeletePost(token);
+  const unsave = useToggleSave(token);
 
-  useEffect(() => {
-    const el = sentinelRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-          fetchNextPage();
-        }
-      },
-      { rootMargin: "300px" },
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
-
-  if (query.isLoading || (tab === "gallery" && !username))
-    return <GridSkeleton />;
-
-  if (query.isError) {
-    return (
-      <div className="py-12 text-center">
-        <p className="text-sm text-red-500">
-          {query.error instanceof Error
-            ? query.error.message
-            : "Failed to load posts."}
-        </p>
-        <Button
-          onClick={() => query.refetch()}
-          className="mt-4 rounded-full bg-[#6936F2] text-white hover:bg-[#5b2bd9]"
-        >
-          Try again
-        </Button>
-      </div>
-    );
-  }
-
-  const posts = query.data?.pages.flatMap((p) => p.items) ?? [];
-
-  if (posts.length === 0) {
-    return (
-      <div className="py-12 text-center text-sm text-neutral-400">
-        {tab === "gallery" ? "No posts yet." : "No saved posts yet."}
-      </div>
-    );
-  }
+  if (tab === "gallery" && !username) return <GridSkeleton />;
 
   return (
-    <>
-      <div className="grid grid-cols-3 gap-1">
-        {posts.map((post) => (
-          <div
-            key={post.id}
-            className="aspect-square overflow-hidden rounded-md bg-[#0A0D12]"
+    <PostGridView
+      query={query}
+      emptyText={tab === "gallery" ? "No posts yet." : "No saved posts yet."}
+      renderAction={(post) =>
+        tab === "gallery" ? (
+          <TileButton
+            label="Delete post"
+            disabled={del.isPending}
+            onClick={() => {
+              if (!window.confirm("Delete this post? This cannot be undone."))
+                return;
+              del.mutate(post.id, {
+                onSuccess: () => dispatch(showToast("Post Deleted")),
+              });
+            }}
           >
-            {post.imageUrl && (
-              <img
-                src={post.imageUrl}
-                alt={post.caption || "Post"}
-                loading="lazy"
-                className="h-full w-full object-cover"
-              />
-            )}
-          </div>
-        ))}
-      </div>
-
-      <div
-        ref={sentinelRef}
-        className="py-6 text-center text-sm text-neutral-400"
-      >
-        {isFetchingNextPage ? "Loading more..." : ""}
-      </div>
-    </>
+            <Trash2 size={16} />
+          </TileButton>
+        ) : (
+          <TileButton
+            label="Remove from Saved"
+            onClick={() =>
+              unsave.mutate(
+                { id: post.id, enable: false },
+                { onSuccess: () => dispatch(showToast("Removed from Saved")) },
+              )
+            }
+          >
+            <X size={16} />
+          </TileButton>
+        )
+      }
+    />
   );
 }

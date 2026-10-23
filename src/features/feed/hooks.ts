@@ -7,9 +7,10 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import type { FeedPage, Post } from "@/types/post";
-import { fetchFeed, fetchMe, togglePostAction } from "./api";
+import { fetchFeed, fetchMe, fetchSavedIds, togglePostAction } from "./api";
 
 export const feedKey = ["feed"] as const;
+export const savedIdsKey = ["saved-ids"] as const;
 
 type FeedData = InfiniteData<FeedPage>;
 
@@ -31,6 +32,15 @@ export function useFeed(token: string | null) {
   });
 }
 
+// Daftar id post yang disimpan user (feed tidak memuat savedByMe)
+export function useSavedIds(token: string | null) {
+  return useQuery({
+    queryKey: savedIdsKey,
+    queryFn: () => fetchSavedIds(token!),
+    enabled: !!token,
+  });
+}
+
 export function patchPost(qc: QueryClient, id: string, fn: (p: Post) => Post) {
   qc.setQueriesData<FeedData>({ queryKey: feedKey }, (old) =>
     old
@@ -43,6 +53,7 @@ export function patchPost(qc: QueryClient, id: string, fn: (p: Post) => Post) {
         }
       : old,
   );
+  qc.setQueryData<Post>(["post", id], (old) => (old ? fn(old) : old));
 }
 
 function usePostToggle(token: string | null, kind: "like" | "save") {
@@ -54,29 +65,46 @@ function usePostToggle(token: string | null, kind: "like" | "save") {
 
     onMutate: async ({ id, enable }) => {
       await qc.cancelQueries({ queryKey: feedKey });
-      const snapshot = qc.getQueriesData<FeedData>({ queryKey: feedKey });
+      if (kind === "save") await qc.cancelQueries({ queryKey: savedIdsKey });
 
-      patchPost(qc, id, (p) => {
-        if (kind === "like") {
+      const snapshot = qc.getQueriesData<FeedData>({ queryKey: feedKey });
+      const prevSaved = qc.getQueryData<string[]>(savedIdsKey);
+
+      if (kind === "like") {
+        patchPost(qc, id, (p) => {
           if (p.likedByMe === enable) return p; // idempotent
           return {
             ...p,
             likedByMe: enable,
             likeCount: Math.max(0, p.likeCount + (enable ? 1 : -1)),
           };
-        }
-        return { ...p, savedByMe: enable };
-      });
+        });
+      } else {
+        qc.setQueryData<string[]>(savedIdsKey, (old) => {
+          const set = new Set(old ?? []);
+          if (enable) set.add(id);
+          else set.delete(id);
+          return [...set];
+        });
+        patchPost(qc, id, (p) => ({ ...p, savedByMe: enable }));
+      }
 
-      return { snapshot };
+      return { snapshot, prevSaved };
     },
 
     onError: (_err, _vars, ctx) => {
       ctx?.snapshot.forEach(([key, data]) => qc.setQueryData(key, data));
+      if (ctx?.prevSaved) qc.setQueryData(savedIdsKey, ctx.prevSaved);
     },
 
     onSettled: () => {
       qc.invalidateQueries({ queryKey: feedKey });
+      qc.invalidateQueries({ queryKey: ["profile-posts"] });
+      qc.invalidateQueries({ queryKey: ["me"] });
+      qc.invalidateQueries({ queryKey: ["post"] });
+      qc.invalidateQueries({ queryKey: ["my-likes"] });
+      qc.invalidateQueries({ queryKey: ["user-posts"] });
+      if (kind === "save") qc.invalidateQueries({ queryKey: savedIdsKey });
     },
   });
 }

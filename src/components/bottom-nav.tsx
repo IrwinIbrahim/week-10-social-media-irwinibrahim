@@ -18,7 +18,10 @@ export default function BottomNav() {
   return (
     <nav className="fixed inset-x-0 bottom-6 z-50 flex justify-center px-4">
       <div className="flex h-16 w-full max-w-90 items-center justify-around rounded-full border border-white/10 bg-[#0A0D12]/95 backdrop-blur">
-        <Link href="/" className={itemClass(pathname === "/")}>
+        <Link
+          href="/"
+          className={itemClass(pathname === "/" || pathname === "/feed")}
+        >
           <Icon name="logo-home" size={24} />
           Home
         </Link>

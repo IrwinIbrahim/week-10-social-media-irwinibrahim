@@ -13,6 +13,8 @@ import { showToast } from "@/store/toast-slice";
 import type { Post, User } from "@/types/post";
 import EmojiPicker from "./emoji-picker";
 import { useAddComment, useComments } from "./hooks";
+import Link from "next/link";
+import ShareModal from "@/features/share/share-modal";
 
 interface CommentsModalProps {
   post: Post;
@@ -40,6 +42,7 @@ export default function CommentsModal({
   const [emojiOpen, setEmojiOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
@@ -191,7 +194,11 @@ export default function CommentsModal({
         <div className="flex min-h-0 flex-1 flex-col px-3 pt-5 md:pt-4">
           {/* Penulis (desktop) */}
           <div className="hidden items-start justify-between md:flex">
-            <div className="flex items-center gap-3">
+            <Link
+              href={`/users/${encodeURIComponent(post.author.username)}`}
+              onClick={onClose}
+              className="flex items-center gap-3 hover:opacity-90"
+            >
               <Avatar
                 src={post.author.avatarUrl}
                 name={post.author.name}
@@ -203,7 +210,7 @@ export default function CommentsModal({
                   {timeAgo(post.createdAt)}
                 </p>
               </div>
-            </div>
+            </Link>
 
             <div ref={menuWrapRef} className="relative">
               <button
@@ -292,7 +299,11 @@ export default function CommentsModal({
                       key={c.id}
                       className="border-b border-[#181D27] py-3 first:pt-0"
                     >
-                      <div className="flex items-center gap-3">
+                      <Link
+                        href={`/users/${encodeURIComponent(c.author.username)}`}
+                        onClick={onClose}
+                        className="flex w-fit items-center gap-3 hover:opacity-90"
+                      >
                         <Avatar
                           src={c.author.avatarUrl}
                           name={c.author.name}
@@ -304,7 +315,7 @@ export default function CommentsModal({
                             {timeAgo(c.createdAt)}
                           </p>
                         </div>
-                      </div>
+                      </Link>
                       <p className="mt-2 whitespace-pre-line wrap-break-word text-sm leading-6">
                         {c.text}
                       </p>
@@ -417,6 +428,15 @@ export default function CommentsModal({
           </div>
         </div>
       </div>
+      <button
+        type="button"
+        onClick={() => setShareOpen(true)}
+        aria-label="Share"
+        className="flex items-center gap-1.5 text-sm font-semibold"
+      >
+        <Icon name="logo-share" size={24} className="text-white" />
+        {post.shareCount}
+      </button>
     </div>
   );
 }

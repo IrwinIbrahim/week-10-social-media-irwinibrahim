@@ -2,19 +2,15 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import Link from "next/link";
 import type {
   InfiniteData,
   UseInfiniteQueryResult,
 } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import type { FeedPage } from "@/types/post";
+import type { FeedPage, Post } from "@/types/post";
 
-interface PostGridViewProps {
-  query: UseInfiniteQueryResult<InfiniteData<FeedPage>, Error>;
-  emptyText: string;
-}
-
-function GridSkeleton() {
+export function GridSkeleton() {
   return (
     <div className="grid grid-cols-3 gap-1">
       {Array.from({ length: 9 }).map((_, i) => (
@@ -27,14 +23,48 @@ function GridSkeleton() {
   );
 }
 
-export default function PostGridView({ query, emptyText }: PostGridViewProps) {
+export function TileButton({
+  label,
+  onClick,
+  disabled,
+  children,
+}: {
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      onClick={onClick}
+      disabled={disabled}
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-black/70 text-white backdrop-blur hover:bg-black disabled:opacity-50"
+    >
+      {children}
+    </button>
+  );
+}
+
+interface PostGridViewProps {
+  query: UseInfiniteQueryResult<InfiniteData<FeedPage>, Error>;
+  emptyText: string;
+  renderAction?: (post: Post) => React.ReactNode;
+}
+
+export default function PostGridView({
+  query,
+  emptyText,
+  renderAction,
+}: PostGridViewProps) {
   const sentinelRef = useRef<HTMLDivElement>(null);
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = query;
 
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
-
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
@@ -43,7 +73,6 @@ export default function PostGridView({ query, emptyText }: PostGridViewProps) {
       },
       { rootMargin: "300px" },
     );
-
     observer.observe(el);
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
@@ -80,15 +109,20 @@ export default function PostGridView({ query, emptyText }: PostGridViewProps) {
         {posts.map((post) => (
           <div
             key={post.id}
-            className="aspect-square overflow-hidden rounded-md bg-[#0A0D12]"
+            className="relative aspect-square overflow-hidden rounded-md bg-[#0A0D12]"
           >
-            {post.imageUrl && (
-              <img
-                src={post.imageUrl}
-                alt={post.caption || "Post"}
-                loading="lazy"
-                className="h-full w-full object-cover"
-              />
+            <Link href={`/posts/${post.id}`} className="block h-full w-full">
+              {post.imageUrl && (
+                <img
+                  src={post.imageUrl}
+                  alt={post.caption || "Post"}
+                  loading="lazy"
+                  className="h-full w-full object-cover"
+                />
+              )}
+            </Link>
+            {renderAction && (
+              <div className="absolute right-2 top-2">{renderAction(post)}</div>
             )}
           </div>
         ))}

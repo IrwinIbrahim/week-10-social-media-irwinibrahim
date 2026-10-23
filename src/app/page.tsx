@@ -1,5 +1,5 @@
-import FeedPage from "@/features/feed/feed-page";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return <FeedPage />;
+  redirect("/feed");
 }

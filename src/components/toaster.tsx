@@ -21,7 +21,7 @@ export default function Toaster() {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 top-21 z-60 flex h-10 items-center justify-between rounded-lg bg-[#039855] px-3 text-sm font-semibold text-white shadow-lg md:inset-x-auto md:right-6 md:top-26.25 md:w-75 xl:left-[calc(50%+332px)] xl:right-auto"
+      className="fixed inset-x-4 top-21 z-90 flex h-10 items-center justify-between rounded-lg bg-[#039855] px-3 text-sm font-semibold text-white shadow-lg md:inset-x-auto md:right-6 md:top-26.25 md:w-75 xl:left-[calc(50%+332px)] xl:right-auto"
     >
       <span>{message}</span>
       <button
